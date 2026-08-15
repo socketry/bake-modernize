@@ -4,7 +4,6 @@
 # Copyright, 2026, by Samuel Williams.
 
 require "bake/context"
-require "async/ollama"
 require "sus/fixtures/temporary_directory_context"
 
 describe "modernize:actions" do
@@ -78,14 +77,15 @@ describe "modernize:actions" do
 		RUBY
 		File.write(File.join(root, "gems.rb"), gems)
 		
-		mock(Async::Ollama::Transform) do |mock|
-			mock.replace(:call) do |content, model:, instruction:, template:|
-				expect(content).to be == gems
-				expect(model).to be == "qwen3-coder:latest"
+		mock(Bake::Modernize) do |mock|
+			mock.replace(:transform_file) do |path, instruction:, template:, validate:|
+				expect(path).to be == File.join(root, "gems.rb")
 				expect(instruction).to be(:include?, "included in the `test` group")
 				expect(template).to be(:include?, %{gem "bake-test-external"})
 				
-				gems.sub(%{	gem "bake-test"\n}, %{\tgem "bake-test"\n\tgem "bake-test-external"\n})
+				updated = gems.sub(%{	gem "bake-test"\n}, %{\tgem "bake-test"\n\tgem "bake-test-external"\n})
+				expect(validate.call(updated)).to be_truthy
+				File.write(path, updated)
 			end
 		end
 		
@@ -113,17 +113,6 @@ describe "modernize:actions" do
 			end
 		RUBY
 		File.write(File.join(root, "gems.rb"), gems)
-		
-		mock(Async::Ollama::Transform) do |mock|
-			mock.replace(:call) do |content, model:, instruction:, template:|
-				expect(content).to be == gems
-				expect(model).to be == "qwen3-coder:latest"
-				expect(instruction).to be(:include?, "Remove the `bake-test-external` gem")
-				expect(template).not.to be(:include?, %{gem "bake-test-external"})
-				
-				gems.sub(%{	gem "bake-test-external"\n}, "")
-			end
-		end
 		
 		mock(recipe) do |mock|
 			mock.replace(:system){}

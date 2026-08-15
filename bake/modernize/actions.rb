@@ -78,33 +78,15 @@ def update_external_test_gem(root, include:)
 	
 	return unless File.exist?(gems_path)
 	
-	require "async/ollama"
-	
-	existing = File.read(gems_path)
-	updated = Async::Ollama::Transform.call(existing,
-		model: "qwen3-coder:latest",
-		instruction: external_test_gem_instruction(include),
-		template: external_test_gem_template(include),
-	)
-	File.write(gems_path, updated)
-end
-
-def external_test_gem_instruction(include)
 	if include
-		"Ensure the `bake-test-external` gem is included in the `test` group. Preserve existing gems, groups, options, comments and formatting. If the `test` group does not exist, create one. Do not duplicate the gem if it already exists."
+		Bake::Modernize::Gems.ensure_dependency(gems_path, "bake-test-external", group: :test, template: external_test_gem_template)
 	else
-		"Remove the `bake-test-external` gem from the file. Preserve existing gems, groups, options, comments and formatting. Remove empty lines only when they were only separating the removed gem."
+		Bake::Modernize::Gems.remove(gems_path, "bake-test-external")
 	end
 end
 
-def external_test_gem_template(include)
-	template = File.read(Bake::Modernize.template_path_for("actions") + "gems.rb")
-	
-	if include
-		return template
-	end
-	
-	template.sub(/^\s*gem "bake-test-external"\n/, "")
+def external_test_gem_template
+	File.read(Bake::Modernize.template_path_for("actions") + "gems.rb")
 end
 
 def repository_url(root)
