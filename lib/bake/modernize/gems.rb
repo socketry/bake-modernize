@@ -50,6 +50,24 @@ module Bake
 				)
 			end
 			
+			# Ensure the named gem dependencies exist using a validated transform.
+			# @parameter path [String] The path to the dependency file.
+			# @parameter names [Array(String)] The gem names to add.
+			# @parameter group [Symbol] The dependency group that should contain the gems.
+			# @parameter template [String] The desired dependency file shape to use as transform guidance.
+			# @returns [bool] True if the file was changed.
+			# @raises [ArgumentError] If the transform output does not include all gems.
+			def self.ensure_dependencies(path, names, group:, template:)
+				gems = names.map{|name| "`#{name}`"}.join(", ")
+				instruction = "Ensure the #{gems} gems are included in the `#{group}` group. Preserve existing gems, groups, options, comments and formatting. If the `#{group}` group does not exist, create one. Do not duplicate any gems that already exist."
+				
+				Bake::Modernize.transform_file(path,
+					instruction: instruction,
+					template: template,
+					validate: -> content{names.all?{|name| present?(content, name)}},
+				)
+			end
+			
 			# Build a regular expression for matching a simple gem declaration line.
 			# @parameter name [String] The gem name to match.
 			# @returns [Regexp] A regular expression that matches the gem declaration line.
