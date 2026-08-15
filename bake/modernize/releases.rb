@@ -55,20 +55,21 @@ def update_releases_md(releases_md_path)
 end
 
 def update_bake(root)
-	require "async/ollama"
-	
 	bake_path = File.join(root, "bake.rb")
 	template = File.read(RELEASES_TEMPLATE_ROOT + "bake.rb")
 	
 	if File.exist?(bake_path)
-		existing = File.read(bake_path)
-		updated = Async::Ollama::Transform.call(existing,
-			model: "qwen3-coder:latest",
+		Bake::Modernize.transform_file(bake_path,
 			instruction: "Merge the template into the existing file. Add any missing methods and update existing method bodies to include any missing calls shown in the template. Do not remove any existing calls.",
 			template: template,
+			validate: -> content{validate_bake_transform(content)},
 		)
-		File.write(bake_path, updated)
 	else
 		File.write(bake_path, template)
 	end
+end
+
+def validate_bake_transform(content)
+	content.include?(%{context["releases:update"].call(version)}) &&
+		content.include?(%{context["releases:github:release"].call(tag)})
 end

@@ -7,8 +7,6 @@ require "sus/fixtures/async/reactor_context"
 require "sus/fixtures/temporary_directory_context"
 require "bake/context"
 
-require "async/ollama"
-
 describe "modernize:releases" do
 	include Sus::Fixtures::Async::ReactorContext
 	include Sus::Fixtures::TemporaryDirectoryContext
@@ -104,14 +102,13 @@ describe "modernize:releases" do
 		RUBY
 		File.write(bake_path, existing)
 		
-		mock(Async::Ollama::Transform) do |mock|
-			mock.replace(:call) do |content, model:, instruction:, template:|
-				expect(content).to be == existing
-				expect(model).to be == "qwen3-coder:latest"
+		mock(Bake::Modernize) do |mock|
+			mock.replace(:transform_file) do |path, instruction:, template:, validate:|
+				expect(path).to be == bake_path
 				expect(instruction).to be(:include?, "Merge the template")
 				expect(template).to be(:include?, "def after_gem_release")
 				
-				<<~RUBY
+				updated = <<~RUBY
 					# frozen_string_literal: true
 					
 					def after_gem_release_version_increment(version)
@@ -123,6 +120,8 @@ describe "modernize:releases" do
 						context["releases:github:release"].call(tag)
 					end
 				RUBY
+				expect(validate.call(updated)).to be_truthy
+				File.write(path, updated)
 			end
 		end
 		
