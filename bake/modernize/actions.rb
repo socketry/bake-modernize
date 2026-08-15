@@ -66,24 +66,45 @@ def update_external_test(root)
 	external_workflow_path = File.expand_path(".github/workflows/test-external.yaml", root)
 	
 	if File.exist?(external_config_path)
-		system("bundle", "add", "bake-test-external", "--group", "test", chdir: root)
+		update_external_test_gem(root, include: true)
 	else
 		FileUtils::Verbose.rm(external_workflow_path) if File.exist?(external_workflow_path)
-		
-		if external_test_gem?(root)
-			system("bundle", "remove", "bake-test-external", chdir: root)
-		end
+		update_external_test_gem(root, include: false)
 	end
 end
 
-def external_test_gem?(root)
-	gemfile_path = ["gems.rb", "Gemfile"].find do |path|
-		File.exist?(File.expand_path(path, root))
+def update_external_test_gem(root, include:)
+	gems_path = File.expand_path("gems.rb", root)
+	
+	return unless File.exist?(gems_path)
+	
+	require "async/ollama"
+	
+	existing = File.read(gems_path)
+	updated = Async::Ollama::Transform.call(existing,
+		model: "qwen3-coder:latest",
+		instruction: external_test_gem_instruction(include),
+		template: external_test_gem_template(include),
+	)
+	File.write(gems_path, updated)
+end
+
+def external_test_gem_instruction(include)
+	if include
+		"Ensure the `bake-test-external` gem is included in the `test` group. Preserve existing gems, groups, options, comments and formatting. If the `test` group does not exist, create one. Do not duplicate the gem if it already exists."
+	else
+		"Remove the `bake-test-external` gem from the file. Preserve existing gems, groups, options, comments and formatting. Remove empty lines only when they were only separating the removed gem."
 	end
+end
+
+def external_test_gem_template(include)
+	template = File.read(Bake::Modernize.template_path_for("decode") + "gems.rb")
 	
-	return false unless gemfile_path
-	
-	File.read(File.expand_path(gemfile_path, root)).match?(/^\s*gem\s+["']bake-test-external["']/)
+	if include
+		template.sub(%{	gem "bake-test"\n}, %{\tgem "bake-test"\n\tgem "bake-test-external"\n})
+	else
+		template
+	end
 end
 
 def repository_url(root)
