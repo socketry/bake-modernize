@@ -133,8 +133,15 @@ describe "modernize:actions" do
 		RUBY
 		File.write(File.join(root, "gems.rb"), gems)
 		
+		mock(Bake::Modernize::Gems) do |mock|
+			mock.replace(:remove) do |path, name|
+				expect(path).to be == File.join(root, "gems.rb")
+				expect(name).to be == "bake-test-external"
+			end
+		end
+		
 		mock(recipe) do |mock|
-			mock.replace(:system){}
+			mock.replace(:update_documentation_gem){}
 		end
 		
 		task.call(root: root)
@@ -142,7 +149,6 @@ describe "modernize:actions" do
 		external_workflow_path = File.join(root, ".github", "workflows", "test-external.yaml")
 		expect(File.exist?(external_workflow_path)).to be_falsey
 		
-		expect(File.read(File.join(root, "gems.rb"))).not.to be(:include?, %{gem "bake-test-external"})
 	end
 	
 	it "detects SSH repository URLs" do
