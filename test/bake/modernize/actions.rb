@@ -14,6 +14,58 @@ describe "modernize:actions" do
 	let(:task) {context.lookup("modernize:actions")}
 	let(:recipe) {task.instance_variable_get(:@instance)}
 	
+	it "removes travis configuration" do
+		File.write(File.join(root, ".travis.yml"), "language: ruby\n")
+		
+		mock(recipe) do |mock|
+			mock.replace(:system){}
+		end
+		
+		task.call(root: root)
+		
+		expect(File.exist?(File.join(root, ".travis.yml"))).to be_falsey
+	end
+	
+	it "updates readme badges" do
+		repository = Rugged::Repository.init_at(root)
+		repository.remotes.create("origin", "git@github.com:ioquatix/bake-modernize.git")
+		
+		readme_path = File.join(root, "README.md")
+		File.write(readme_path, <<~MARKDOWN)
+			# Bake Modernize
+			
+			[![Old](https://example.com/badge.svg)](https://example.com)
+			
+			## Usage
+		MARKDOWN
+		
+		updates = []
+		mock(recipe) do |mock|
+			mock.replace(:update_badges) do |path, url|
+				updates << [path, url]
+			end
+			mock.replace(:system){}
+		end
+		
+		task.call(root: root)
+		
+		expect(updates).to be == [["README.md", "https://github.com/ioquatix/bake-modernize"]]
+	end
+	
+	it "updates legacy workflow filenames" do
+		workflows_path = File.join(root, ".github", "workflows")
+		FileUtils.mkdir_p(workflows_path)
+		File.write(File.join(workflows_path, "build.yml"), "name: Build\n")
+		File.write(File.join(workflows_path, "development.yaml"), "name: Development\n")
+		File.write(File.join(workflows_path, "coverage.yaml"), "name: Coverage\n")
+		
+		recipe.send(:update_filenames, root)
+		
+		expect(File.exist?(File.join(workflows_path, "build.yaml"))).to be_truthy
+		expect(File.exist?(File.join(workflows_path, "test.yaml"))).to be_truthy
+		expect(File.exist?(File.join(workflows_path, "test-coverage.yaml"))).to be_truthy
+	end
+	
 	it "includes the external test workflow when config/external.yaml exists" do
 		FileUtils.mkdir_p(File.join(root, "config"))
 		File.write(File.join(root, "config", "external.yaml"), "---\n")
@@ -38,7 +90,7 @@ describe "modernize:actions" do
 		end
 		
 		mock(recipe) do |mock|
-			mock.replace(:system) {}
+			mock.replace(:system){}
 		end
 		
 		task.call(root: root)
@@ -74,7 +126,7 @@ describe "modernize:actions" do
 		end
 		
 		mock(recipe) do |mock|
-			mock.replace(:system) {}
+			mock.replace(:system){}
 		end
 		
 		task.call(root: root)
@@ -83,5 +135,46 @@ describe "modernize:actions" do
 		expect(File.exist?(external_workflow_path)).to be_falsey
 		
 		expect(File.read(File.join(root, "gems.rb"))).not.to be(:include?, %{gem "bake-test-external"})
+	end
+	
+	it "detects SSH repository URLs" do
+		repository = Rugged::Repository.init_at(root)
+		repository.remotes.create("origin", "git@github.com:ioquatix/bake-modernize.git")
+		
+		expect(recipe.send(:repository_url, root)).to be == "https://github.com/ioquatix/bake-modernize"
+	end
+	
+	it "replaces existing readme badges" do
+		readme_path = File.join(root, "readme.md")
+		File.write(readme_path, <<~MARKDOWN)
+			# Bake Modernize
+			
+			[![Old](https://example.com/badge.svg)](https://example.com)
+			
+			## Usage
+		MARKDOWN
+		
+		recipe.send(:update_badges, readme_path, "https://github.com/ioquatix/bake-modernize")
+		
+		content = File.read(readme_path)
+		expect(content).to be(:include?, "Development Status")
+		expect(content).not.to be(:include?, "https://example.com")
+	end
+	
+	it "inserts readme badges before the next heading" do
+		readme_path = File.join(root, "readme.md")
+		File.write(readme_path, <<~MARKDOWN)
+			# Bake Modernize
+			
+			Introductory text.
+			
+			## Usage
+		MARKDOWN
+		
+		recipe.send(:update_badges, readme_path, "https://github.com/ioquatix/bake-modernize")
+		
+		content = File.read(readme_path)
+		expect(content).to be(:include?, "Development Status")
+		expect(content.index("Development Status")).to be < content.index("## Usage")
 	end
 end
