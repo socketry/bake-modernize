@@ -66,6 +66,125 @@ describe "modernize:actions" do
 		expect(File.exist?(File.join(workflows_path, "test-coverage.yaml"))).to be_truthy
 	end
 	
+	it "creates a standard test workflow without optional ruby implementations" do
+		recipe.send(:update_workflows, root)
+		
+		content = File.read(File.join(root, ".github", "workflows", "test.yaml"))
+		expect(content).to be(:include?, "ruby: head")
+		expect(content).not.to be(:include?, "ruby: jruby")
+		expect(content).not.to be(:include?, "ruby: truffleruby")
+	end
+	
+	it "merges existing test workflow configuration without re-adding removed optional rubies" do
+		workflows_path = File.join(root, ".github", "workflows")
+		FileUtils.mkdir_p(workflows_path)
+		
+		existing = <<~YAML
+			name: Test
+			on: [push, pull_request]
+			jobs:
+			  test:
+			    services:
+			      redis:
+			        image: redis
+			    strategy:
+			      matrix:
+			        include:
+			          - os: ubuntu
+			            ruby: jruby
+			            experimental: true
+			          - os: ubuntu
+			            ruby: head
+			            experimental: true
+		YAML
+		File.write(File.join(workflows_path, "test.yaml"), existing)
+		
+		mock(Async::Ollama::Transform) do |mock|
+			mock.replace(:call) do |content, model:, instruction:, template:|
+				expect(content).to be == existing
+				expect(model).to be == "qwen3-coder:latest"
+				expect(instruction).to be(:include?, "Preserve existing services")
+				expect(instruction).to be(:include?, "jruby")
+				expect(instruction).to be(:include?, "truffleruby")
+				expect(template).to be(:include?, "ruby: jruby")
+				expect(template).not.to be(:include?, "ruby: truffleruby")
+				
+				<<~YAML
+					name: Test
+					on: [push, pull_request]
+					permissions:
+					  contents: read
+					jobs:
+					  test:
+					    name: ${{matrix.ruby}} on ${{matrix.os}}
+					    runs-on: ${{matrix.os}}-latest
+					    continue-on-error: ${{matrix.experimental}}
+					    services:
+					      redis:
+					        image: redis
+					    strategy:
+					      matrix:
+					        os:
+					          - ubuntu
+					          - macos
+					        ruby:
+					          - "3.3"
+					          - "3.4"
+					          - "4.0"
+					        experimental: [false]
+					        include:
+					          - os: ubuntu
+					            ruby: jruby
+					            experimental: true
+					          - os: ubuntu
+					            ruby: head
+					            experimental: true
+					    steps:
+					    - uses: actions/checkout@v7
+					    - uses: ruby/setup-ruby@v1
+					      with:
+					        ruby-version: ${{matrix.ruby}}
+					        bundler-cache: true
+					    - name: Run tests
+					      timeout-minutes: 10
+					      run: bundle exec bake test
+				YAML
+			end
+		end
+		
+		recipe.send(:update_workflows, root)
+		
+		content = File.read(File.join(workflows_path, "test.yaml"))
+		expect(content).to be(:include?, "services:")
+		expect(content).to be(:include?, "image: redis")
+		expect(content).to be(:include?, "ruby: jruby")
+		expect(content).not.to be(:include?, "ruby: truffleruby")
+	end
+	
+	it "rejects invalid test workflow transform output" do
+		workflows_path = File.join(root, ".github", "workflows")
+		FileUtils.mkdir_p(workflows_path)
+		
+		File.write(File.join(workflows_path, "test.yaml"), <<~YAML)
+			name: Test
+			jobs:
+			  test:
+			    strategy:
+			      matrix:
+			        include:
+			          - os: ubuntu
+			            ruby: jruby
+		YAML
+		
+		mock(Async::Ollama::Transform) do |mock|
+			mock.replace(:call){"name: Test\n"}
+		end
+		
+		expect do
+			recipe.send(:update_test_workflow, File.join(workflows_path, "test.yaml"))
+		end.to raise_exception(ArgumentError)
+	end
+	
 	it "includes the external test workflow when config/external.yaml exists" do
 		FileUtils.mkdir_p(File.join(root, "config"))
 		File.write(File.join(root, "config", "external.yaml"), "---\n")

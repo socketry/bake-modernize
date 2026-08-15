@@ -21,8 +21,7 @@ def update(root:)
 	
 	update_filenames(root)
 	
-	template_root = Bake::Modernize.template_path_for("actions")
-	Bake::Modernize.copy_template(template_root + ".github", File.join(root, ".github"))
+	update_workflows(root)
 	update_external_test(root)
 	
 	readme_path = ["README.md", "readme.md"].find{|path| File.exist?(File.expand_path(path, root))}
@@ -35,6 +34,93 @@ def update(root:)
 end
 
 private
+
+OPTIONAL_TEST_RUBIES = ["truffleruby", "jruby"].freeze
+
+def update_workflows(root)
+	template_root = Bake::Modernize.template_path_for("actions")
+	test_workflow_path = File.expand_path(".github/workflows/test.yaml", root)
+	merge_test_workflow = File.exist?(test_workflow_path)
+	
+	if merge_test_workflow
+		copy_actions_template(template_root + ".github", File.join(root, ".github"), except: "workflows/test.yaml")
+		update_test_workflow(test_workflow_path)
+	else
+		Bake::Modernize.copy_template(template_root + ".github", File.join(root, ".github"))
+	end
+end
+
+def copy_actions_template(source_path, destination_path, except:)
+	glob = Build::Files::Glob.new(source_path, "**/*")
+	
+	glob.each do |path|
+		next if path.relative_path == except
+		
+		full_path = File.join(destination_path, path.relative_path)
+		
+		if File.directory?(path)
+			FileUtils.mkdir_p(full_path) unless File.directory?(full_path)
+		elsif Bake::Modernize.stale?(path, full_path)
+			FileUtils::Verbose.cp(path, full_path)
+		end
+	end
+end
+
+def update_test_workflow(path)
+	require "async/ollama"
+	
+	existing = File.read(path)
+	updated = Async::Ollama::Transform.call(existing,
+		model: "qwen3-coder:latest",
+		instruction: test_workflow_instruction(existing),
+		template: test_workflow_template(existing),
+	)
+	
+	unless test_workflow_valid?(updated, existing)
+		raise ArgumentError, "Test workflow transform output did not satisfy validation!"
+	end
+	
+	File.write(path, updated)
+end
+
+def test_workflow_instruction(existing)
+	optional_rubies = OPTIONAL_TEST_RUBIES.select{|ruby| test_workflow_ruby?(existing, ruby)}
+	removed_rubies = OPTIONAL_TEST_RUBIES - optional_rubies
+	
+	<<~TEXT
+		Update the GitHub Actions test workflow to match the supplied template while preserving project-specific configuration.
+		Preserve existing services, env, custom matrix dimensions, matrix excludes, matrix includes, steps, comments and formatting unless they conflict with the template.
+		Preserve these existing optional Ruby matrix entries if present: #{optional_rubies.join(", ")}.
+		Do not add these optional Ruby matrix entries because they are absent from the existing workflow: #{removed_rubies.join(", ")}.
+		Keep `ruby: head` as an experimental Ubuntu matrix include.
+		Use `actions/checkout@v7`, `ruby/setup-ruby@v1`, `bundler-cache: true`, and `bundle exec bake test`.
+	TEXT
+end
+
+def test_workflow_template(existing)
+	template = File.read(Bake::Modernize.template_path_for("actions") + ".github/workflows/test.yaml")
+	entries = OPTIONAL_TEST_RUBIES.select{|ruby| test_workflow_ruby?(existing, ruby)}.map do |ruby|
+		"          - os: ubuntu\n            ruby: #{ruby}\n            experimental: true\n"
+	end.join
+	
+	template.sub(/^          - os: ubuntu\n            ruby: head\n/m, entries + "          - os: ubuntu\n            ruby: head\n")
+end
+
+def test_workflow_valid?(updated, existing)
+	optional_rubies_preserved = OPTIONAL_TEST_RUBIES.all? do |ruby|
+		test_workflow_ruby?(updated, ruby) == test_workflow_ruby?(existing, ruby)
+	end
+	
+	return false unless optional_rubies_preserved
+	return false if existing.include?("services:") && !updated.include?("services:")
+	return false if existing.include?("env:") && !updated.include?("env:")
+	
+	return updated.include?("ruby/setup-ruby@v1") && updated.include?("bundle exec bake test")
+end
+
+def test_workflow_ruby?(content, ruby)
+	content.match?(/^\s*ruby:\s*["']?#{Regexp.escape(ruby)}["']?\s*$/)
+end
 
 def update_filenames(root)
 	actions_root = Build::Files::Path.new(root) + ".github/workflows"
