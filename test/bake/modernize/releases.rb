@@ -23,10 +23,8 @@ describe "modernize:releases" do
 		File.write(readme_path, "# Example\n")
 		
 		mock(recipe) do |mock|
-			mock.replace(:system) do |*arguments, chdir: nil|
-				expect(arguments).to be == ["bundle", "add", "bake-releases", "--group", "maintenance"]
-				expect(chdir).to be == root
-				true
+			mock.replace(:update_releases_gem) do |path|
+				expect(path).to be == root
 			end
 			
 			mock.replace(:update_bake) do |path|
@@ -40,6 +38,22 @@ describe "modernize:releases" do
 		expect(File.read(readme_path)).to be =~ /## Releases/
 		expect(File.exist?(releases_md_path)).to be_truthy
 		expect(File.exist?(bake_path)).to be_truthy
+	end
+	
+	it "updates bake-releases dependency using the gem helpers" do
+		gems_path = File.join(root, "gems.rb")
+		File.write(gems_path, %{source "https://rubygems.org"\n})
+		
+		mock(Bake::Modernize::Gems) do |mock|
+			mock.replace(:ensure_dependency) do |path, name, group:, template:|
+				expect(path).to be == gems_path
+				expect(name).to be == "bake-releases"
+				expect(group).to be == :maintenance
+				expect(template).to be(:include?, %{gem "bake-releases"})
+			end
+		end
+		
+		recipe.send(:update_releases_gem, root)
 	end
 	
 	it "does not add releases to a readme that already has them" do

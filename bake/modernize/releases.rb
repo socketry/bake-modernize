@@ -10,7 +10,7 @@ require "markly"
 #
 # @parameter root [String] The root directory of the project.
 def releases(root: Dir.pwd)
-	system("bundle", "add", "bake-releases", "--group", "maintenance", chdir: root)
+	update_releases_gem(root)
 	
 	update_releases(File.join(root, "readme.md"))
 	update_releases_md(File.join(root, "releases.md"))
@@ -46,6 +46,17 @@ def update_releases(readme_path)
 end
 
 RELEASES_TEMPLATE_ROOT = Bake::Modernize.template_path_for("releases")
+
+def update_releases_gem(root)
+	gems_path = File.expand_path("gems.rb", root)
+	return unless File.exist?(gems_path)
+	
+	Bake::Modernize::Gems.ensure_dependency(gems_path,
+		"bake-releases",
+		group: :maintenance,
+		template: File.read(RELEASES_TEMPLATE_ROOT + "gems.rb"),
+	)
+end
 
 def update_releases_md(releases_md_path)
 	# Don't overwrite an existing releases.md:
