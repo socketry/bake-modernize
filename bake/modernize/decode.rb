@@ -15,14 +15,19 @@ def decode(root: Dir.pwd)
 	
 	return unless File.exist?(gems_path)
 	
-	require "async/ollama"
-	
 	existing = File.read(gems_path)
 	template = File.read(DECODE_TEMPLATE_ROOT + "gems.rb")
-	updated = Async::Ollama::Transform.call(existing,
-		model: "qwen3-coder:latest",
+	Bake::Modernize.transform_file(gems_path,
 		instruction: "Move the `decode` gem from the `test` group to the `maintenance` group. If the `decode` gem is not in a `test` group, leave the file unchanged. If there is no `maintenance` group, create one.",
 		template: template,
+		validate: -> content{validate_decode_transform(existing, content)},
 	)
-	File.write(gems_path, updated)
+end
+
+private
+
+def validate_decode_transform(existing, content)
+	return true unless Bake::Modernize::Gems.present?(existing, "decode")
+	
+	Bake::Modernize::Gems.present?(content, "decode")
 end
