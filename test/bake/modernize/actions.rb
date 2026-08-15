@@ -17,6 +17,7 @@ describe "modernize:actions" do
 		File.write(File.join(root, ".travis.yml"), "language: ruby\n")
 		
 		mock(recipe) do |mock|
+			mock.replace(:update_documentation_gem){}
 			mock.replace(:system){}
 		end
 		
@@ -80,6 +81,8 @@ describe "modernize:actions" do
 		mock(Bake::Modernize) do |mock|
 			mock.replace(:transform_file) do |path, instruction:, template:, validate:|
 				expect(path).to be == File.join(root, "gems.rb")
+				return unless instruction.include?("bake-test-external")
+				
 				expect(instruction).to be(:include?, "included in the `test` group")
 				expect(template).to be(:include?, %{gem "bake-test-external"})
 				
@@ -90,6 +93,7 @@ describe "modernize:actions" do
 		end
 		
 		mock(recipe) do |mock|
+			mock.replace(:update_documentation_gem){}
 			mock.replace(:system){}
 		end
 		
@@ -99,6 +103,21 @@ describe "modernize:actions" do
 		expect(File.exist?(external_workflow_path)).to be_truthy
 		
 		expect(File.read(File.join(root, "gems.rb"))).to be(:include?, %{gem "bake-test-external"})
+	end
+	
+	it "adds the documentation dependency using the gem helpers" do
+		File.write(File.join(root, "gems.rb"), %{source "https://rubygems.org"\n})
+		
+		mock(Bake::Modernize::Gems) do |mock|
+			mock.replace(:ensure_dependency) do |path, name, group:, template:|
+				expect(path).to be == File.join(root, "gems.rb")
+				expect(name).to be == "decode"
+				expect(group).to be == :documentation
+				expect(template).to be(:include?, %{gem "decode"})
+			end
+		end
+		
+		recipe.send(:update_documentation_gem, root)
 	end
 	
 	it "removes the external test workflow when config/external.yaml does not exist" do

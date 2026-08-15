@@ -31,7 +31,7 @@ def update(root:)
 		update_badges(readme_path, repository_url(root))
 	end
 	
-	system("bundle", "add", "--group", "documentation", "decode", chdir: root)
+	update_documentation_gem(root)
 end
 
 private
@@ -79,13 +79,20 @@ def update_external_test_gem(root, include:)
 	return unless File.exist?(gems_path)
 	
 	if include
-		Bake::Modernize::Gems.ensure_dependency(gems_path, "bake-test-external", group: :test, template: external_test_gem_template)
+		Bake::Modernize::Gems.ensure_dependency(gems_path, "bake-test-external", group: :test, template: actions_gems_template)
 	else
 		Bake::Modernize::Gems.remove(gems_path, "bake-test-external")
 	end
 end
 
-def external_test_gem_template
+def update_documentation_gem(root)
+	gems_path = File.expand_path("gems.rb", root)
+	return unless File.exist?(gems_path)
+	
+	Bake::Modernize::Gems.ensure_dependency(gems_path, "decode", group: :documentation, template: actions_gems_template)
+end
+
+def actions_gems_template
 	File.read(Bake::Modernize.template_path_for("actions") + "gems.rb")
 end
 

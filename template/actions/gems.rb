@@ -7,6 +7,10 @@ source "https://rubygems.org"
 
 gemspec
 
+group :documentation do
+	gem "decode"
+end
+
 group :test do
 	gem "bake-test"
 	gem "bake-test-external"
