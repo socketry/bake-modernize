@@ -22,7 +22,7 @@ def update(root:)
 	update_filenames(root)
 	
 	template_root = Bake::Modernize.template_path_for("actions")
-	Bake::Modernize.copy_template(template_root, root)
+	Bake::Modernize.copy_template(template_root + ".github", File.join(root, ".github"))
 	update_external_test(root)
 	
 	readme_path = ["README.md", "readme.md"].find{|path| File.exist?(File.expand_path(path, root))}
@@ -98,13 +98,13 @@ def external_test_gem_instruction(include)
 end
 
 def external_test_gem_template(include)
-	template = File.read(Bake::Modernize.template_path_for("decode") + "gems.rb")
+	template = File.read(Bake::Modernize.template_path_for("actions") + "gems.rb")
 	
 	if include
-		template.sub(%{	gem "bake-test"\n}, %{\tgem "bake-test"\n\tgem "bake-test-external"\n})
-	else
-		template
+		return template
 	end
+	
+	template.sub(/^\s*gem "bake-test-external"\n/, "")
 end
 
 def repository_url(root)
