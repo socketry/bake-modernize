@@ -7,18 +7,7 @@ source "https://rubygems.org"
 
 gemspec
 
-group :maintenance, optional: true do
-	gem "bake-gem"
-	gem "bake-releases"
-	
-	gem "decode"
-	
-	gem "utopia-project"
-end
-
 group :test do
-	gem "sus"
-	gem "covered"
-	
 	gem "bake-test"
+	gem "bake-test-external"
 end

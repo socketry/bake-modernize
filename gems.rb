@@ -27,5 +27,4 @@ group :test do
 	gem "rubocop-socketry"
 	
 	gem "bake-test"
-	gem "bake-test-external"
 end
