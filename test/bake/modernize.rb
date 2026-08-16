@@ -21,7 +21,7 @@ describe Bake::Modernize do
 	it "updates the gemfile before configuring actions" do
 		calls = []
 		task = context.lookup("modernize")
-		recipe = task.instance_variable_get(:@instance)
+		recipe = task.instance
 		
 		mock(recipe) do |mock|
 			mock.replace(:call) do |*tasks|
@@ -59,7 +59,7 @@ describe Bake::Modernize do
 			end
 		end
 		task = context.lookup("after_gem_release_version_increment")
-		recipe = task.instance_variable_get(:@instance)
+		recipe = task.instance
 		
 		mock(recipe) do |mock|
 			mock.replace(:context){call_context}
@@ -84,7 +84,7 @@ describe Bake::Modernize do
 			end
 		end
 		task = context.lookup("after_gem_release")
-		recipe = task.instance_variable_get(:@instance)
+		recipe = task.instance
 		
 		mock(recipe) do |mock|
 			mock.replace(:context){call_context}

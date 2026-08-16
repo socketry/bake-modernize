@@ -12,7 +12,7 @@ describe "modernize:actions" do
 	
 	let(:context) {Bake::Context.load}
 	let(:task) {context.lookup("modernize:actions")}
-	let(:recipe) {task.instance_variable_get(:@instance)}
+	let(:recipe) {task.instance}
 	
 	it "removes travis configuration" do
 		File.write(File.join(root, ".travis.yml"), "language: ruby\n")
