@@ -14,7 +14,7 @@ describe "modernize:gemspec" do
 	let(:context) {Bake::Context.load}
 	let(:task) {context.lookup("modernize:gemspec")}
 	let(:update_task) {context.lookup("modernize:gemspec:update")}
-	let(:recipe) {update_task.instance_variable_get(:@instance)}
+	let(:recipe) {update_task.instance}
 	let(:gemspec_path) {File.join(root, "example.gemspec")}
 	let(:output) {StringIO.new}
 	

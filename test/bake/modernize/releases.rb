@@ -15,7 +15,7 @@ describe "modernize:releases" do
 	
 	let(:context) {Bake::Context.load}
 	let(:task) {context.lookup("modernize:releases")}
-	let(:recipe) {task.instance_variable_get(:@instance)}
+	let(:recipe) {task.instance}
 	
 	let(:bake_path) {File.join(root, "bake.rb")}
 	let(:releases_md_path) {File.join(root, "releases.md")}

@@ -18,6 +18,22 @@ describe Bake::Modernize do
 		expect(Bake::Modernize::VERSION).to be =~ /^\d+\.\d+\.\d+$/
 	end
 	
+	it "updates the gemfile before configuring actions" do
+		calls = []
+		task = context.lookup("modernize")
+		recipe = task.instance
+		
+		mock(recipe) do |mock|
+			mock.replace(:call) do |*tasks|
+				calls.concat(tasks)
+			end
+		end
+		
+		task.call
+		
+		expect(calls.index("modernize:gemfile")).to be < calls.index("modernize:actions")
+	end
+	
 	it "detects stale files when the destination exists" do
 		source_path = File.join(root, "source.txt")
 		destination_path = File.join(root, "destination.txt")
@@ -43,7 +59,7 @@ describe Bake::Modernize do
 			end
 		end
 		task = context.lookup("after_gem_release_version_increment")
-		recipe = task.instance_variable_get(:@instance)
+		recipe = task.instance
 		
 		mock(recipe) do |mock|
 			mock.replace(:context){call_context}
@@ -68,7 +84,7 @@ describe Bake::Modernize do
 			end
 		end
 		task = context.lookup("after_gem_release")
-		recipe = task.instance_variable_get(:@instance)
+		recipe = task.instance
 		
 		mock(recipe) do |mock|
 			mock.replace(:context){call_context}

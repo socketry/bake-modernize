@@ -8,9 +8,9 @@ def modernize
 	call(
 		"modernize:git",
 		"modernize:readme",
-		"modernize:actions",
 		"modernize:editorconfig",
 		"modernize:gemfile",
+		"modernize:actions",
 		"modernize:rubocop",
 		"modernize:signing",
 		"modernize:gemspec",
