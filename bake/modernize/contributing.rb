@@ -31,16 +31,16 @@ We welcome contributions to this project.
 
 To run the test suite:
 
-``` shell
-bundle exec sus
+``` bash
+$ bundle exec sus
 ```
 
 ### Making Releases
 
 To make a new release:
 
-``` shell
-bundle exec bake gem:release:patch # or minor or major
+``` bash
+$ bundle exec bake gem:release:patch # or minor or major
 ```
 
 ### Developer Certificate of Origin
