@@ -17,6 +17,22 @@ describe Bake::Modernize do
 	it "has a version number" do
 		expect(Bake::Modernize::VERSION).to be =~ /^\d+\.\d+\.\d+$/
 	end
+
+	it "updates the gemfile before configuring actions" do
+		calls = []
+		task = context.lookup("modernize")
+		recipe = task.instance_variable_get(:@instance)
+		
+		mock(recipe) do |mock|
+			mock.replace(:call) do |*tasks|
+				calls.concat(tasks)
+			end
+		end
+		
+		task.call
+		
+		expect(calls.index("modernize:gemfile")).to be < calls.index("modernize:actions")
+	end
 	
 	it "detects stale files when the destination exists" do
 		source_path = File.join(root, "source.txt")
