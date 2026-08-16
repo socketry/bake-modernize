@@ -66,6 +66,17 @@ describe "modernize:actions" do
 		expect(File.exist?(File.join(workflows_path, "test-coverage.yaml"))).to be_truthy
 	end
 	
+	it "allows the documentation workflow to be dispatched manually" do
+		mock(recipe) do |mock|
+			mock.replace(:system){}
+		end
+		
+		task.call(root: root)
+		
+		documentation_workflow_path = File.join(root, ".github", "workflows", "documentation.yaml")
+		expect(File.read(documentation_workflow_path)).to be(:include?, "  workflow_dispatch:\n")
+	end
+	
 	it "includes the external test workflow when config/external.yaml exists" do
 		FileUtils.mkdir_p(File.join(root, "config"))
 		File.write(File.join(root, "config", "external.yaml"), "---\n")
