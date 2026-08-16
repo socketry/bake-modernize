@@ -17,7 +17,7 @@ describe Bake::Modernize do
 	it "has a version number" do
 		expect(Bake::Modernize::VERSION).to be =~ /^\d+\.\d+\.\d+$/
 	end
-
+	
 	it "updates the gemfile before configuring actions" do
 		calls = []
 		task = context.lookup("modernize")
