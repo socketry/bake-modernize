@@ -1,5 +1,9 @@
 # Releases
 
+## Unreleased
+
+  - Ignore `/vendor/bundle` by default for dependencies installed by GitHub Actions' Bundler cache.
+
 ## v0.54.1
 
   - Better `version.rb` detection in `modernize:gemspec`.
