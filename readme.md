@@ -52,11 +52,13 @@ $ bundle exec sus
 
 ### Making Releases
 
-To make a new release:
+To prepare a release branch and open a pull request from an up-to-date `main`:
 
 ``` bash
-$ bundle exec bake gem:release:patch # or minor or major
+$ bundle exec bake gem:github:release:patch # or minor or major
 ```
+
+You can also run the `release-prepare.yaml` workflow from GitHub Actions. Merging the reviewed version bump publishes the gem using RubyGems Trusted Publishing. See the [release instructions](.github/releasing.md) for setup, signing, and recovery.
 
 ### Developer Certificate of Origin
 

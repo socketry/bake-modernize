@@ -8,7 +8,7 @@ source "https://rubygems.org"
 gemspec
 
 group :maintenance, optional: true do
-	gem "bake-gem"
+	gem "bake-gem-github", "~> 0.2.0"
 	gem "bake-releases"
 	
 	gem "decode"

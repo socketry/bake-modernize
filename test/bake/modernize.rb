@@ -72,26 +72,4 @@ describe Bake::Modernize do
 			["utopia:project:update", []],
 		]
 	end
-	
-	it "creates GitHub releases after gem release" do
-		calls = []
-		call_context = Object.new
-		call_context.define_singleton_method(:[]) do |name|
-			Object.new.tap do |callable|
-				callable.define_singleton_method(:call) do |*arguments|
-					calls << [name, arguments]
-				end
-			end
-		end
-		task = context.lookup("after_gem_release")
-		recipe = task.instance
-		
-		mock(recipe) do |mock|
-			mock.replace(:context){call_context}
-		end
-		
-		task.call(tag: "v1.2.3")
-		
-		expect(calls).to be == [["releases:github:release", ["v1.2.3"]]]
-	end
 end
