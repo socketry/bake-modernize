@@ -58,7 +58,7 @@ To prepare a release branch and open a pull request from an up-to-date `main`:
 $ bundle exec bake gem:github:release:patch # or minor or major
 ```
 
-See the [bake-gem-github guide](https://github.com/socketry/bake-gem-github/blob/main/guides/getting-started/readme.md) for setup, remote releases, and recovery.
+See [bake-gem-github](https://github.com/socketry/bake-gem-github) for setup, remote releases, and recovery.
 
 ### Developer Certificate of Origin
 
