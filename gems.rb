@@ -9,7 +9,7 @@ gemspec
 
 group :maintenance, optional: true do
 	gem "agent-context"
-	gem "bake-gem-github", "~> 0.4.0"
+	gem "bake-gem-github", "~> 0.5.0"
 	gem "bake-releases"
 	
 	gem "decode"

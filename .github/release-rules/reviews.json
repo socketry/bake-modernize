@@ -28,7 +28,8 @@
         "require_code_owner_review": false,
         "allowed_merge_methods": [
           "merge",
-          "squash"
+          "squash",
+          "rebase"
         ]
       }
     }
