@@ -1,6 +1,6 @@
 # Releases
 
-## Unreleased
+## v0.60.0
 
   - Ignore `/vendor/bundle` by default for dependencies installed by GitHub Actions' Bundler cache.
 

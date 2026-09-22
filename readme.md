@@ -12,6 +12,10 @@ Please see the [project documentation](https://ioquatix.github.io/bake-modernize
 
 Please see the [project releases](https://ioquatix.github.io/bake-modernize/releases/index) for all releases.
 
+### v0.60.0
+
+  - Ignore `/vendor/bundle` by default for dependencies installed by GitHub Actions' Bundler cache.
+
 ### v0.54.1
 
   - Better `version.rb` detection in `modernize:gemspec`.
