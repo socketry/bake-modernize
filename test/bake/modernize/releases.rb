@@ -91,7 +91,50 @@ describe "modernize:releases" do
 		recipe.send(:update_bake, root)
 		
 		expect(File.exist?(bake_path)).to be_truthy
-		expect(File.read(bake_path)).to be =~ /after_gem_release/
+		expect(File.read(bake_path)).to be =~ /def after_gem_release\(/
+	end
+	
+	it "only creates the version increment hook for bake-gem-github" do
+		File.write(File.join(root, "gems.rb"), <<~RUBY)
+			group :maintenance, optional: true do
+				gem "bake-gem-github"
+			end
+		RUBY
+		
+		recipe.send(:update_bake, root)
+		
+		scope = Module.new
+		scope.module_eval(File.read(bake_path), bake_path)
+		expect(scope.instance_methods(false)).to be == [:after_gem_release_version_increment]
+		expect(File.read(bake_path)).to be(:include?, 'context["releases:update"].call(version)')
+		expect(File.read(bake_path)).to be(:include?, 'context["utopia:project:update"].call')
+	end
+	
+	it "removes obsolete publishing calls while preserving custom hooks when merging" do
+		File.write(File.join(root, "gems.rb"), 'gem "bake-gem-github"')
+		existing = <<~RUBY
+			def after_gem_release(tag:, **options)
+				context["releases:github:release"].call(tag)
+				context["custom:notify"].call(tag)
+			end
+		RUBY
+		File.write(bake_path, existing)
+		updated = existing.lines.reject{|line| line.include?("releases:github:release")}.join
+		
+		mock(Async::Ollama::Transform) do |mock|
+			mock.replace(:call) do |content, model:, instruction:, template:|
+				expect(content).to be == existing
+				expect(instruction).to be(:include?, "Remove the releases:github:release call")
+				expect(instruction).to be(:include?, "Remove that method and its documentation if it becomes empty")
+				expect(instruction).to be(:include?, "Preserve all other methods and calls")
+				expect(template).not.to be =~ /def after_gem_release\(/
+				updated
+			end
+		end
+		
+		recipe.send(:update_bake, root)
+		
+		expect(File.read(bake_path)).to be == updated
 	end
 	
 	it "merges release hooks into an existing bake.rb using AI" do

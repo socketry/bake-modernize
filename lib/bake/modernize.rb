@@ -18,6 +18,21 @@ module Bake
 		
 		TEMPLATE_ROOT = Build::Files::Path.new(ROOT) + "template"
 		
+		# Read the gem dependencies declared by the target project, including optional groups.
+		# @parameter root [String] The root directory of the project.
+		# @returns [Array(String)] The declared dependency names.
+		def self.gem_dependencies(root)
+			require "bundler"
+			
+			if path = ["gems.rb", "Gemfile"].map{|name| File.expand_path(name, root)}.find{|path| File.file?(path)}
+				dsl = Bundler::Dsl.new
+				dsl.eval_gemfile(path)
+				return dsl.dependencies.map(&:name)
+			end
+			
+			return []
+		end
+		
 		# Compute the template root path relative to the gem root.
 		def self.template_path_for(path)
 			TEMPLATE_ROOT + path
