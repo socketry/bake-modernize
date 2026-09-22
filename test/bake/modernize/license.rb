@@ -262,6 +262,34 @@ describe Bake::Modernize::License::Authorship do
 		expect(authorship.copyrights_for_path("lib/example.rb").map(&:statement)).to be == ["Copyright, 2026, by Samuel Williams."]
 	end
 	
+	it "ignores bot modifications in copyrights and gem authors" do
+		authorship.add("lib/example.rb", author, time)
+		authorship.add("lib/example.rb", {name: "github-actions[bot]"}, time)
+		authorship.add("lib/example.rb", {name: "dependabot[bot]"}, time)
+		
+		expect(authorship.sorted_authors).to be == ["Samuel Williams"]
+		expect(authorship.copyrights.map(&:author)).to be == ["Samuel Williams"]
+		expect(authorship.copyrights_for_path("lib/example.rb").map(&:author)).to be == ["Samuel Williams"]
+	end
+	
+	it "ignores bots from imported contributors and preserves attribution through bot renames" do
+		File.write(File.join(root, ".contributors.yaml"), [{
+			author: {name: "dependabot[bot]", email: "bot@example.com"},
+			time: time,
+			path: "lib/example.rb",
+		}].to_yaml)
+		
+		repository = Rugged::Repository.init_at(root)
+		write_commit(repository, "lib/example.rb", "example\n", author: author.merge(time: time))
+		FileUtils.mv(File.join(root, "lib/example.rb"), File.join(root, "lib/renamed.rb"))
+		write_commit(repository, "lib/renamed.rb", "example\n", author: {name: "github-actions[bot]", email: "bot@example.com", time: time})
+		
+		authorship.extract(root)
+		
+		expect(authorship.sorted_authors).to be == ["Samuel Williams"]
+		expect(authorship.copyrights_for_path("lib/renamed.rb").map(&:author)).to be == ["Samuel Williams"]
+	end
+	
 	it "extracts authorship from contributors and git history" do
 		File.write(File.join(root, ".contributors.yaml"), [{
 			author: {name: "Contributor Name", email: "contributor@example.com"},
