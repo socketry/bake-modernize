@@ -27,6 +27,6 @@ jobs:
       - name: Regenerate release content
         env:
           RELEASE_BASE: ${{ github.event.pull_request.base.sha }}
-        run: bundle exec bake gem:release:validate "base=$RELEASE_BASE" optional=true
+        run: bundle exec bake gem:github:release:validate "base=$RELEASE_BASE"
       - name: Build unsigned package
         run: bundle exec bake gem:build signing_key=false
