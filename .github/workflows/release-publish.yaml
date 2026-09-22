@@ -1,34 +1,28 @@
 name: Publish release
 
-# Only merged source is executed. Validation of unmerged PRs lives in its own
-# read-only pull_request workflow. This trigger also supports reviewed fork PRs.
+# Inspect the exact pushed commit and publish only a validated, merged release PR.
 on:
-  pull_request_target:
-    types: [closed]
+  push:
     branches: ["main"]
 
 permissions:
   contents: read
   pull-requests: read
 
-concurrency:
-  group: release-publish
-  cancel-in-progress: false
-
 env:
   BUNDLE_WITH: maintenance
-  RELEASE_PR: ${{ github.event.pull_request.number }}
 
 jobs:
   inspect:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     outputs:
       release: ${{ steps.inspect.outputs.release }}
       commit: ${{ steps.inspect.outputs.commit }}
+      pull_request: ${{ steps.inspect.outputs.pull_request }}
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - uses: ruby/setup-ruby@v1
@@ -37,7 +31,8 @@ jobs:
           bundler-cache: true
       - id: inspect
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_COMMIT: ${{ github.sha }}
         run: bundle exec bake gem:github:release:resolve
 
   publish:
@@ -45,6 +40,12 @@ jobs:
     if: needs.inspect.outputs.release == 'true'
     runs-on: ubuntu-latest
     environment: rubygems
+    concurrency:
+      group: release-publish
+      cancel-in-progress: false
+      queue: max
+    env:
+      RELEASE_PR: ${{ needs.inspect.outputs.pull_request }}
     permissions:
       contents: write
       pull-requests: read
@@ -55,8 +56,6 @@ jobs:
       - uses: actions/checkout@v7
         with:
           # Inspection verified this merged commit belongs to the default branch.
-          # Checkout v7 also blocks merged fork PRs without this explicit opt-in.
-          allow-unsafe-pr-checkout: true
           ref: ${{ needs.inspect.outputs.commit }}
           fetch-depth: 0
           persist-credentials: false
@@ -68,7 +67,7 @@ jobs:
       - name: Build or restore artifact
         id: build
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
           GEM_SIGNING_KEY: ${{ secrets.GEM_SIGNING_KEY }}
         run: bundle exec bake gem:github:release:build
       - name: Sign RubyGems attestation
@@ -100,5 +99,5 @@ jobs:
       - uses: rubygems/configure-rubygems-credentials@main
       - name: Verify, publish, and finalize
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: bundle exec bake gem:github:release:publish
