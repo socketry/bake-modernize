@@ -31,6 +31,7 @@ Gem::Specification.new do |spec|
 	spec.add_dependency "async-ollama", "~> 0.10"
 	spec.add_dependency "bake"
 	spec.add_dependency "build-files", "~> 1.6"
+	spec.add_dependency "erb"
 	spec.add_dependency "markly", "~> 0.13"
 	spec.add_dependency "rugged"
 end

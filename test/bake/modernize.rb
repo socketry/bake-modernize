@@ -32,6 +32,38 @@ describe Bake::Modernize do
 		task.call
 		
 		expect(calls.index("modernize:gemfile")).to be < calls.index("modernize:actions")
+		expect(calls).not.to be(:include?, "modernize:releases:github")
+	end
+	
+	with ".gem_dependencies" do
+		it "reads optional groups without matching comments or similar gem names" do
+			File.write(File.join(root, "gems.rb"), <<~RUBY)
+				# gem "bake-gem"
+				group :maintenance, optional: true do
+					gem "bake-gem-github", "~> 0.4.0"
+				end
+			RUBY
+			
+			expect(subject.gem_dependencies(root)).to be == ["bake-gem-github"]
+		end
+		
+		it "supports Gemfile and included manifests" do
+			File.write(File.join(root, "Gemfile"), 'eval_gemfile "maintenance.rb"')
+			File.write(File.join(root, "maintenance.rb"), 'gem "bake-gem"')
+			
+			expect(subject.gem_dependencies(root)).to be == ["bake-gem"]
+		end
+		
+		it "prefers gems.rb when both manifests exist" do
+			File.write(File.join(root, "gems.rb"), 'gem "bake-gem-github"')
+			File.write(File.join(root, "Gemfile"), 'gem "bake-gem"')
+			
+			expect(subject.gem_dependencies(root)).to be == ["bake-gem-github"]
+		end
+		
+		it "returns no dependencies without a manifest" do
+			expect(subject.gem_dependencies(root)).to be == []
+		end
 	end
 	
 	it "detects stale files when the destination exists" do

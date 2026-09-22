@@ -55,7 +55,13 @@ EOF
 def update_contributing(readme_path)
 	root = Markly.parse(File.read(readme_path))
 	
-	replacement = Markly.parse(DEFAULT_CONTRIBUTING)
+	contributing = DEFAULT_CONTRIBUTING
+	if Bake::Modernize.gem_dependencies(File.dirname(readme_path)).include?("bake-gem-github")
+		contributing = contributing.sub("gem:release:patch", "gem:github:release:patch")
+		contributing = contributing.sub("### Developer Certificate of Origin", "See [bake-gem-github](https://github.com/socketry/bake-gem-github) for setup and release instructions.\n\n### Developer Certificate of Origin")
+	end
+	
+	replacement = Markly.parse(contributing)
 	
 	return unless node = root.find_header("Contributing")
 	
