@@ -8,9 +8,17 @@ A gem for modernizing files in your Ruby project.
 
 Please see the [project documentation](https://ioquatix.github.io/bake-modernize/) for more details.
 
+  - [Getting Started](https://ioquatix.github.io/bake-modernize/guides/getting-started/index) - This guide explains how to update a Ruby gem with `bake-modernize`, review the generated changes, and optionally migrate to releases through GitHub.
+
 ## Releases
 
 Please see the [project releases](https://ioquatix.github.io/bake-modernize/releases/index) for all releases.
+
+### Unreleased
+
+  - Provide agent context for updating gems and configuring GitHub releases.
+  - Ignore `[bot]` authors in copyright attributions and gem authors.
+  - Add opt-in `modernize:releases:github` migration and omit redundant publishing hooks for gems using `bake-gem-github`.
 
 ### v0.60.0
 
