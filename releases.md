@@ -1,6 +1,6 @@
 # Releases
 
-## Unreleased
+## v0.61.0
 
   - Provide agent context for updating gems and configuring GitHub releases.
   - Ignore `[bot]` authors in copyright attributions and gem authors.
