@@ -1,0 +1,15 @@
+# Automatically generated context index for Utopia::Project guides.
+# Do not edit then files in this directory directly, instead edit the guides and then run `bake utopia:project:agent:context:update`.
+---
+description: Automatically modernize parts of your project/gem.
+metadata:
+  bug_tracker_uri: https://github.com/ioquatix/bake-modernize/issues
+  changelog_uri: https://github.com/ioquatix/bake-modernize/blob/main/releases.md
+  documentation_uri: https://ioquatix.github.io/bake-modernize/
+  funding_uri: https://github.com/sponsors/ioquatix/
+  source_code_uri: https://github.com/ioquatix/bake-modernize.git
+files:
+- path: getting-started.md
+  title: Getting Started
+  description: This guide explains how to update a Ruby gem with `bake-modernize`,
+    review the generated changes, and optionally migrate to releases through GitHub.

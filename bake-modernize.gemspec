@@ -23,7 +23,7 @@ Gem::Specification.new do |spec|
 		"source_code_uri" => "https://github.com/ioquatix/bake-modernize.git",
 	}
 	
-	spec.files = Dir.glob(["{bake,lib,template}/**/*", "*.md", "release.cert"], File::FNM_DOTMATCH, base: __dir__)
+	spec.files = Dir.glob(["{bake,context,lib,template}/**/*", "*.md", "release.cert"], File::FNM_DOTMATCH, base: __dir__)
 	
 	spec.required_ruby_version = ">= 3.3"
 	
