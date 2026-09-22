@@ -229,6 +229,8 @@ module Bake
 				
 				# Add a modification to the authorship.
 				def add(path, author, time, id = nil)
+					return if author[:name].end_with?("[bot]")
+					
 					modification = Modification.new(author, time, path, id)
 					
 					@commits[modification.key] << modification
