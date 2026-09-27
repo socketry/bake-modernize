@@ -67,7 +67,9 @@ bundle exec bake modernize:releases:github
 
 This task adds `bake-gem-github` to maintenance dependencies, removes the direct `bake-gem` dependency when present, and updates release notes and Bake hooks. `bake-gem-github` supplies `bake-gem` and `bake-releases` as dependencies. Existing `bake-gem-github` version requirements are preserved.
 
-Keep `after_gem_release_version_increment`, which updates release notes and project documentation. GitHub publishing replaces the `after_gem_release` call to `releases:github:release`. When merging an existing `bake.rb`, review the generated edit to ensure it removes that call while preserving unrelated custom behavior. Subsequent `modernize:releases` runs select the same template based on the target project's dependencies and do not add the publishing hook back. Contributing instructions also use `gem:github:release:patch` for projects that have adopted it.
+Keep `after_gem_release_version_increment`, which runs `modernize:license` to refresh `license.md` and Ruby copyright headers before updating release notes and project documentation. This copyright refresh is included in the generated hook for both `bake-gem` and `bake-gem-github`. When upgrading an existing project, run `bundle exec bake modernize:releases` and review the merged `bake.rb` to include the new call.
+
+GitHub publishing replaces the `after_gem_release` call to `releases:github:release`. When merging an existing `bake.rb`, review the generated edit to ensure it removes that call while preserving unrelated custom behavior. Subsequent `modernize:releases` runs select the same template based on the target project's dependencies and do not add the publishing hook back. Contributing instructions also use `gem:github:release:patch` for projects that have adopted it.
 
 Configure the release workflows separately using the installed gem's setup task. Pass the actual required CI job names; for example, a repository using the standard Ruby matrix and coverage workflows might use:
 
