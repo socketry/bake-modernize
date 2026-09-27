@@ -12,6 +12,55 @@ module Bake
 		module License
 			GIT_BLAME_IGNORE_REVS = ".git-blame-ignore-revs"
 			
+			# Updates Ruby source headers without removing documentation comments.
+			class SourceFile
+				MAGIC_COMMENT = /\A#\s*(?:-\*-\s*)?(?:coding|encoding|frozen_string_literal|warn_indent|shareable_constant_value)\s*[:=]/i
+				LICENSE_COMMENT = /\A#\s*(?:Released under\b|Copyright\b|SPDX-License-Identifier:)/i
+				
+				# Replace the license and copyright header for a Ruby source file.
+				# @parameter path [String] The source file path.
+				# @parameter copyrights [Array(String)] The copyright statements to write.
+				def self.update(path, copyrights:)
+					input = File.readlines(path)
+					prefix = []
+					
+					prefix << input.shift if input.first&.start_with?("#!")
+					while input.first&.match?(MAGIC_COMMENT)
+						prefix << input.shift
+					end
+					
+					# Keep the complete leading comment block, removing only known license metadata.
+					documentation = []
+					while line = input.first
+						break unless line.match?(/\A\s*#/) || line.strip.empty?
+						
+						input.shift
+						next if line.match?(LICENSE_COMMENT)
+						
+						documentation << (line.match?(/\A\s*#\s*\z/) ? "\n" : line)
+					end
+					
+					while documentation.first&.strip&.empty?
+						documentation.shift
+					end
+					while documentation.last&.strip&.empty?
+						documentation.pop
+					end
+					
+					output = prefix.dup
+					output << "\n" if output.any?
+					output << "# Released under the MIT License.\n"
+					copyrights.each do |copyright|
+						output << "# #{copyright}\n"
+					end
+					output << "\n"
+					output.concat(documentation)
+					output.concat(input)
+					
+					File.write(path, output.join)
+				end
+			end
+			
 			# Represents revisions to skip when analyzing authorship.
 			class SkipList
 				# Load the skip list from a directory.

@@ -6,6 +6,44 @@
 require "bake/modernize/license"
 require "sus/fixtures/temporary_directory_context"
 
+describe Bake::Modernize::License::SourceFile do
+	include Sus::Fixtures::TemporaryDirectoryContext
+	
+	it "updates copyright while retaining source documentation" do
+		path = File.join(root, "example.rb")
+		File.write(path, <<~RUBY)
+			#!/usr/bin/env ruby
+			# frozen_string_literal: true
+			
+			# Released under the MIT License.
+			# Copyright, 2024, by Previous Author.
+			
+			# Explains how the example works.
+			
+			class Example
+			end
+		RUBY
+		
+		subject.update(path, copyrights: ["Copyright, 2024-2026, by Samuel Williams."])
+		
+		expect(File.read(path)).to be == <<~RUBY
+			#!/usr/bin/env ruby
+			# frozen_string_literal: true
+			
+			# Released under the MIT License.
+			# Copyright, 2024-2026, by Samuel Williams.
+			
+			# Explains how the example works.
+			class Example
+			end
+		RUBY
+		
+		expected = File.read(path)
+		subject.update(path, copyrights: ["Copyright, 2024-2026, by Samuel Williams."])
+		expect(File.read(path)).to be == expected
+	end
+end
+
 describe Bake::Modernize::License::SkipList do
 	include Sus::Fixtures::TemporaryDirectoryContext
 	
