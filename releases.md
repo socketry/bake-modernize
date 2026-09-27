@@ -1,5 +1,9 @@
 # Releases
 
+## Unreleased
+
+- Refresh `license.md` and Ruby copyright headers with `modernize:license` after version increments in generated release hooks.
+
 ## v0.61.0
 
   - Provide agent context for updating gems and configuring GitHub releases.

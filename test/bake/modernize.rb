@@ -80,7 +80,7 @@ describe Bake::Modernize do
 		expect(Bake::Modernize::Git.current_branch(root, default: "main")).to be == "main"
 	end
 	
-	it "updates documentation after a version increment" do
+	it "updates copyrights and documentation after a version increment" do
 		calls = []
 		call_context = Object.new
 		call_context.define_singleton_method(:[]) do |name|
@@ -100,6 +100,7 @@ describe Bake::Modernize do
 		task.call("1.2.3")
 		
 		expect(calls).to be == [
+			["modernize:license", []],
 			["releases:update", ["1.2.3"]],
 			["utopia:project:update", []],
 		]

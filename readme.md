@@ -14,6 +14,10 @@ Please see the [project documentation](https://ioquatix.github.io/bake-modernize
 
 Please see the [project releases](https://ioquatix.github.io/bake-modernize/releases/index) for all releases.
 
+### Unreleased
+
+  - Refresh `license.md` and Ruby copyright headers with `modernize:license` after version increments in generated release hooks.
+
 ### v0.61.0
 
   - Provide agent context for updating gems and configuring GitHub releases.
