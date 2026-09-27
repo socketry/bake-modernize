@@ -66,50 +66,7 @@ private
 
 def update_source_file_authors(authorship, path, modifications)
 	copyrights = authorship.copyrights_for_modifications(modifications)
-	
-	input = File.readlines(path)
-	output = []
-	
-	if input.first =~ /^\#!/
-		output.push input.shift
-	end
-	
-	# Drop any old copyright statements.
-	while input.first =~ /Copyright/i
-		input.shift
-	end
-	
-	if input.first =~ /^\#.*?\:/
-		output.push input.shift
-		if input.first.chomp.empty?
-			input.shift
-		end
-		output << "\n"
-	end
-	
-	# Remove any existing license:
-	while input.first =~ /^#.*$/
-		input.shift
-	end
-	
-	# Remove any empty lines:
-	while input.first&.chomp&.empty?
-		input.shift
-	end
-	
-	output << "# Released under the MIT License.\n"
-	
-	copyrights.each do |copyright|
-		output << "# #{copyright.statement}\n"
-	end
-	
-	output << "\n"
-	
-	output.concat(input)
-	
-	File.open(path, "w") do |file|
-		file.puts(output)
-	end
+	Bake::Modernize::License::SourceFile.update(path, copyrights: copyrights.map(&:statement))
 end
 
 def remove_license(readme_path)
