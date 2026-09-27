@@ -37,7 +37,7 @@ module Bake
 						input.shift
 						next if line.match?(LICENSE_COMMENT)
 						
-						documentation << (line.match?(/\A\s*#\s*\z/) ? "\n" : line)
+						documentation << line
 					end
 					
 					while documentation.first&.strip&.empty?

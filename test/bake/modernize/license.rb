@@ -19,6 +19,8 @@ describe Bake::Modernize::License::SourceFile do
 			# Copyright, 2024, by Previous Author.
 			
 			# Explains how the example works.
+			#
+			# Keeps the original comment formatting.
 			
 			class Example
 			end
@@ -34,6 +36,8 @@ describe Bake::Modernize::License::SourceFile do
 			# Copyright, 2024-2026, by Samuel Williams.
 			
 			# Explains how the example works.
+			#
+			# Keeps the original comment formatting.
 			class Example
 			end
 		RUBY
