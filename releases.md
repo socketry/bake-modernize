@@ -1,8 +1,8 @@
 # Releases
 
-## Unreleased
+## v0.62.0
 
-- Refresh `license.md` and Ruby copyright headers with `modernize:license` after version increments in generated release hooks.
+  - Refresh `license.md` and Ruby copyright headers with `modernize:license` after version increments in generated release hooks.
 
 ## v0.61.0
 
