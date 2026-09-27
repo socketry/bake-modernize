@@ -19,6 +19,7 @@ describe Bake::Modernize::License::SourceFile do
 			# Copyright, 2024, by Previous Author.
 			
 			# Explains how the example works.
+			
 			class Example
 			end
 		RUBY
