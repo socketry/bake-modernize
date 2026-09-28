@@ -10,10 +10,10 @@ def signing(root: Dir.pwd)
 end
 
 def update(root:)
-	release_certificate_path = File.expand_path("~/.gem/release.cert")
+	release_certificate_path = Bake::Modernize::Signing.certificate_path(root)
 	certificate_path = File.expand_path("release.cert", root)
 	
-	if File.exist?(release_certificate_path)
+	if release_certificate_path
 		FileUtils.cp(release_certificate_path, certificate_path)
 	end
 end
