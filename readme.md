@@ -14,6 +14,10 @@ Please see the [project documentation](https://ioquatix.github.io/bake-modernize
 
 Please see the [project releases](https://ioquatix.github.io/bake-modernize/releases/index) for all releases.
 
+### v0.64.0
+
+  - Prefer the configured signing owner or GitHub owner when selecting RubyGems signing certificates and private keys.
+
 ### v0.62.0
 
   - Refresh `license.md` and Ruby copyright headers with `modernize:license` after version increments in generated release hooks.
