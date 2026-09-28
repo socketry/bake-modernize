@@ -1,6 +1,6 @@
 # Releases
 
-## Unreleased
+## v0.64.0
 
   - Prefer the configured signing owner or GitHub owner when selecting RubyGems signing certificates and private keys.
 
