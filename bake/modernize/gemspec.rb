@@ -24,6 +24,7 @@ def update(path: default_gemspec_path, output: $stdout)
 	spec = ::Gem::Specification.load(path)
 	
 	root = File.dirname(path)
+	signing = Bake::Modernize::Signing.new(spec)
 	version_path = version_path(root, spec.name)
 	
 	constant = File.read(File.join(root, version_path))
@@ -56,12 +57,7 @@ def update(path: default_gemspec_path, output: $stdout)
 	if File.exist?(certificate_path)
 		output.puts "\t"
 		output.puts "\tspec.cert_chain  = [\"release.cert\"]"
-		if spec.signing_key
-			output.puts "\tspec.signing_key = #{Bake::Modernize::Signing.private_key_expression(spec.signing_key)}"
-		else
-			key_path = Bake::Modernize::Signing.private_key_path(root)
-			output.puts "\tspec.signing_key = #{Bake::Modernize::Signing.private_key_expression(key_path)}"
-		end
+		output.puts "\tspec.signing_key = #{signing.private_key_expression}"
 	end
 	
 	if spec.homepage and !spec.homepage.empty?

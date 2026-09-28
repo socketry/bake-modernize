@@ -10,10 +10,10 @@ def signing(root: Dir.pwd)
 end
 
 def update(root:)
-	release_certificate_path = Bake::Modernize::Signing.certificate_path(root)
+	signing = Bake::Modernize::Signing.load(root)
 	certificate_path = File.expand_path("release.cert", root)
 	
-	if release_certificate_path
-		FileUtils.cp(release_certificate_path, certificate_path)
+	if signing.certificate_path
+		FileUtils.cp(signing.certificate_path, certificate_path)
 	end
 end
