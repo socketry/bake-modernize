@@ -3,13 +3,12 @@
 # Released under the MIT License.
 # Copyright, 2026, by Samuel Williams.
 
-require "uri"
-
 module Bake
 	module Modernize
 		# Helpers for locating the RubyGems signing certificate and private key.
 		module Signing
 			GEM_CREDENTIALS_PATH = File.expand_path("~/.gem")
+			GITHUB_OWNER = %r{\Ahttps?://github\.com/([\w.-]+)/}
 
 			# The preferred certificate for a project, if available.
 			# @parameter root [String] The project root.
@@ -51,7 +50,7 @@ module Bake
 				return path.inspect
 			end
 
-			# The signing owner for the project's gemspec, falling back to the GitHub owner.
+			# The signing owner for the project's gemspec, falling back to its GitHub URL.
 			# @parameter root [String] The project root.
 			# @returns [String | Nil] The signing owner.
 			def self.signing_owner(root)
@@ -61,26 +60,13 @@ module Bake
 				spec = Gem::Specification.load(File.join(root, gemspec_path))
 				return unless spec
 
-				if owner = spec.metadata["signing_owner"]
-					return owner if owner.is_a?(String) && owner.match?(/\A[\w.-]+\z/)
-				end
+				owner = spec.metadata["signing_owner"]
+				return owner if owner&.match?(/\A[\w.-]+\z/)
 
 				urls = [spec.metadata["source_code_uri"], spec.homepage].compact
-
 				urls.each do |url|
-					begin
-						uri = URI.parse(url)
-					rescue URI::InvalidURIError
-						next
-					end
-
-					next unless uri.host == "github.com"
-
-					owner = uri.path.split("/")[1]
-					return owner if owner&.match?(/\A[\w.-]+\z/)
+					return match[1] if match = GITHUB_OWNER.match(url)
 				end
-
-				return nil
 			end
 		end
 	end
