@@ -75,7 +75,9 @@ module Bake
 
 				urls = [@gemspec.metadata["source_code_uri"], @gemspec.homepage].compact
 				urls.each do |url|
-					return match[1] if match = GITHUB_OWNER.match(url)
+					if match = GITHUB_OWNER.match(url)
+						return match[1]
+					end
 				end
 			end
 		end
