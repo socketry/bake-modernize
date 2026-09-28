@@ -20,6 +20,7 @@ Gem::Specification.new do |spec|
 		"changelog_uri" => "https://github.com/ioquatix/bake-modernize/blob/main/releases.md",
 		"documentation_uri" => "https://ioquatix.github.io/bake-modernize/",
 		"funding_uri" => "https://github.com/sponsors/ioquatix/",
+		"signing_owner" => "socketry",
 		"source_code_uri" => "https://github.com/ioquatix/bake-modernize.git",
 	}
 	
