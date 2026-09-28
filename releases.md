@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-  - Prefer GitHub-owner-specific RubyGems signing certificates and private keys when modernizing a gem.
+  - Prefer the configured signing owner or GitHub owner when selecting RubyGems signing certificates and private keys.
 
 ## v0.62.0
 

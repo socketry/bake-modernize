@@ -17,7 +17,7 @@ module Bake
 			def self.certificate_path(root)
 				paths = []
 
-				if owner = github_owner(root)
+				if owner = signing_owner(root)
 					paths << File.join(GEM_CREDENTIALS_PATH, "#{owner}-release.cert")
 				end
 
@@ -51,17 +51,21 @@ module Bake
 				return path.inspect
 			end
 
-			# The GitHub owner for the project's gemspec.
+			# The signing owner for the project's gemspec, falling back to the GitHub owner.
 			# @parameter root [String] The project root.
-			# @returns [String | Nil] The GitHub owner.
-			def self.github_owner(root)
+			# @returns [String | Nil] The signing owner.
+			def self.signing_owner(root)
 				gemspec_path = Dir["*.gemspec", base: root].first
 				return unless gemspec_path
 
 				spec = Gem::Specification.load(File.join(root, gemspec_path))
 				return unless spec
 
-				urls = [spec.homepage, spec.metadata["source_code_uri"]].compact
+				if owner = spec.metadata["signing_owner"]
+					return owner if owner.is_a?(String) && owner.match?(/\A[\w.-]+\z/)
+				end
+
+				urls = [spec.metadata["source_code_uri"], spec.homepage].compact
 
 				urls.each do |url|
 					begin
